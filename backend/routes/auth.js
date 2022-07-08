@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 let User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const { json } = require("body-parser");
+const sendEmail = require("../utils/sendEmail")
+const Token = require('../models/tokenModel')
 
 router.route("/").get((req, res) => {
   User.find()
@@ -29,11 +31,13 @@ router.route("/register").post(async (req, res) => {
     // register new user
     // const { name ,email, password} = req.body;
     const newUser = new User(req.body);
-    await newUser.save();
+    const result = await newUser.save();
+    await sendEmail(result, 'verifyemail')
     res
       .status(200)
       .send({ success: true, message: "User registerd successfully" });
   } catch (error) {
+    console.log(error)
     res.status(400).json("Error :" + err);
   }
 });
@@ -45,7 +49,7 @@ router.post("/login", async (req, res) => {
     if (user) {
       const passwordsMatched = await bcrypt.compare(
         req.body.password,
-        user.password
+        user.password 
       );
       if (passwordsMatched) {
         const dataToBeSentToFrontend = {
@@ -74,16 +78,21 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// router.route("/:id").get((req, res) => {
-//   User.findById(req.params.id)
-//     .then((user) => res.json(user))
-//     .catch((err) => res.status(400).json("Err :") + err);
-// });
+router.post('/verifyemail', async(req,res)=>{
+  try {
+    console.log(req.body.token)
+    const tokenData = await Token.findOne({token: req.body.token})
+    if(tokenData){
+      await User.findByIdAndUpdate({ _id: tokenData.userid , isVerified: true})
+      await Token.findByIdAndDelete({token: req.body.token})
+      res.send({success: true, message: "Email Verified Successfully"})
+    }else{
+      res.send({success: false, message: "Invalid token"})
+    }
+  } catch (error) {
+    res.status(500).send(error)
+  }
+})
 
-// router.route("/:id").delete((req, res) => {
-//   User.findByIdAndDelete(req.params.id)
-//     .then(() => res.json("user deleted"))
-//     .catch((err) => res.status(400).json("Error: " + err));
-// });
 
 module.exports = router;

@@ -5,6 +5,7 @@ import { Navbar } from "./Components/Navbar";
 import { Register } from "./Components/Register";
 import { Login } from "./Components/Login";
 import { Home } from "./Components/Home";
+import { VerifyEmail } from "./Components/VerifyEmail";
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<ProtectedRoutes><Home /></ProtectedRoutes>} />
         <Route path="/register" element={<PublicRoutes><Register /></PublicRoutes>} />
         <Route path="/login" element={<PublicRoutes><Login /></PublicRoutes>} />
+        <Route path="/verifyemail/:token" element={<PublicRoutes><VerifyEmail /></PublicRoutes>} />
       </Routes>
    
     </div>
